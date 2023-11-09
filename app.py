@@ -3,9 +3,6 @@ from data import *
 import pandas as pd
 import datetime
 
-
-
-
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
 
@@ -35,7 +32,7 @@ if __name__ == "__main__":
         colms = st.columns((1, 1, 1, 1, 1,1,1,1))
         fields = ["Domain","Ticker","Time","Open","High","Low","Close","Volume"]
         for col, field_name in zip(colms, fields):
-            if field_name != "ticker" and field_name != '_':
+            if field_name != "Ticker" and field_name != 'Domain':
                 col.markdown(f"<p class='header'>{field_name}</p>",unsafe_allow_html=True)
             else:
                 col.markdown(field_name)
