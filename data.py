@@ -1,22 +1,32 @@
 from vnstock import *
 import numpy as np
+import pandas as pd
 class DataGenerate:
     def __init__(self):
-        self.a = 1
-    
-    def getStockCode(self):
-        return listing_companies()['ticker'].values
+        self.data = pd.read_csv("title.csv")
+        self.domain = {'Steel & Manufacturing ': ['Tài nguyên Cơ bản'],
+                        'Transportation': ['Du lịch và Giải trí','Hàng & Dịch vụ Công nghiệp'],
+                        'Technology & Retail Trade': ['Bán lẻ','Công nghệ Thông tin',],
+                        'Bank': ['Ngân hàng'],
+                        'Construction and Real Estate': ['Xây dựng và Vật liệu','Bất động sản'],
+                         }
+    def getStockCode(self):    
+        return self.data['ticker'].values
     def getDomain(self):
-        return np.sort(listing_companies()['icbName'].unique())
+        return self.domain.keys()
 
     def getDatanalyst(self,val,todate):
        #vl = ["Phần mềm","Bất động sản"]
-        df=listing_companies()
+        
+        #val = [self.domain[_] for _ in val]
+        
         checklist = []
         for i in val:
-            checklist.append({f"{i}":df.query('icbName == @i')['ticker'].head(5).values})
+            check = self.domain[i]
+            checklist.append({f"{i}":self.data.query('industry == @check')['ticker'].values})
         #to_date = datetime.datetime.now().strftime('%Y-%m-%d')
         #from_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+      
         todate = str(todate)
         frames = pd.DataFrame()
         for _ in checklist:

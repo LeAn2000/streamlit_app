@@ -21,15 +21,10 @@ if __name__ == "__main__":
         st.session_state.code = None
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>",unsafe_allow_html=True)
-    with st.sidebar:
-        add_selectbox = st.selectbox(
-        "What type of code do you want to predict today?",
-        data.getStockCode(),
-        index=None,
-        placeholder="Select your Stock Code...",
-    )
-        btn_predict = st.button("Predict",on_click=toggle_expand(add_selectbox))
-    with st.expander("Sector & Industry",expanded=True):
+        
+
+    tab1, tab2 = st.tabs(["Sector & Industry","Overview & Predict"])
+    with tab1:
         domain_multi_selectbox = st.multiselect(
         "Choose your domain name to analyst data",
         data.getDomain(),
@@ -55,7 +50,21 @@ if __name__ == "__main__":
             col7.markdown(custommarkdown(i["close"]),unsafe_allow_html=True)
             col8.markdown(custommarkdown(i["volume"]),unsafe_allow_html=True)
             if i["ticker"] != "":
-                col2.button(i['ticker'],use_container_width=True)
-
-    with st.expander("Overview & Predict",expanded=True):
+                if col2.button(i['ticker'],use_container_width=True):
+                    st.session_state.code = i['ticker']
+                    
+    with tab2:
+        with st.form("form"):
+            col1,col2,col3= st.columns([0.3,1,1])
+            col1.write("Input Stock Code:")
+            add_selectbox = col2.selectbox(
+            "",   
+            data.getStockCode(),
+            index=None,
+            placeholder="Select your Stock Code...",
+        )
+            
+            submitted = col3.form_submit_button("Search")
+            if submitted:
+                st.session_state.code = add_selectbox
         st.code(st.session_state.code)
