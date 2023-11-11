@@ -1,8 +1,10 @@
 import streamlit as st
 from data import *
-import pandas as pd
-import datetime
-
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta 
+import plotly.express as px
+from vnstock import * #import all functions, including functions that provide OHLC data for charting
+from vnstock.chart import * 
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
 
@@ -19,7 +21,7 @@ if __name__ == "__main__":
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>",unsafe_allow_html=True)
         
-
+    
     tab1, tab2 = st.tabs(["Sector & Industry","Overview & Predict"])
     with tab1:
         domain_multi_selectbox = st.multiselect(
@@ -51,17 +53,63 @@ if __name__ == "__main__":
                     st.session_state.code = i['ticker']
                     
     with tab2:
-        with st.form("form"):
-            col1,col2,col3= st.columns([0.3,1,1])
-            col1.write("Input Stock Code:")
-            add_selectbox = col2.selectbox(
-            "",   
-            data.getStockCode(),
-            index=None,
-            placeholder="Select your Stock Code...",
-        )
+        with st.expander("Overview", True):
+            with st.form("form"):
+                col1,col2,col3= st.columns([0.3,1,1])
+                col1.write("Input Stock Code:")
+                add_selectbox = col2.selectbox(
+                "a",   
+                data.getStockCode(),
+                index=None,
+                placeholder="Select your Stock Code...",
+            )
+                
+                submitted = col3.form_submit_button("Search")
+                if submitted:
+                    st.session_state.code = add_selectbox
+            # st.markdown('<p class="hihead">View Stock Closing Price based on Historical Data</p>',unsafe_allow_html=True)
+            col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
+            spacetime = relativedelta(months=12)
+            todate = datetime.today()
+            fromdate = todate - spacetime
             
-            submitted = col3.form_submit_button("Search")
-            if submitted:
-                st.session_state.code = add_selectbox
-        st.code(st.session_state.code)
+            with col1:
+                if st.button("1 Week"):
+                    
+                    fromdate = todate - spacetime
+                    
+            with col2:
+                if st.button("1 Month"):
+                    spacetime = relativedelta(months=1)
+                    fromdate = todate - spacetime
+                    
+            with col3:
+                if st.button("3 Months"):
+                    spacetime = relativedelta(months=3)
+                    fromdate = todate - spacetime
+                
+            with col4:
+                if st.button("6 Months"):
+                    spacetime = relativedelta(months=6)
+                    fromdate = todate - spacetime
+                
+            with col5:
+                if st.button("9 Months"):
+                    spacetime = relativedelta(months=9)
+                    fromdate = todate - spacetime
+                
+            with col6:
+                if st.button("12 Months"):
+                    spacetime = relativedelta(months=12)
+                    fromdate = todate - spacetime
+            with col7:
+                if st.button("All Time"):
+                    fromdate  = date(2013,1,1)
+            fromdate = fromdate.strftime('%Y-%m-%d')
+            todate = todate.strftime('%Y-%m-%d')
+            if st.session_state.code != None:
+                chart_data = data.getdateOverview(st.session_state.code, fromdate, todate)
+                fig = candlestick_chart(chart_data, show_volume=True, figure_size=(12, 6), 
+                                        title=f'View {st.session_state.code} Stock Closing Price based on Historical Data', x_label='Date', y_label='Price', 
+                                        colors=('lightgray', 'gray'), reference_colors=('black', 'blue'))
+                st.plotly_chart(fig)

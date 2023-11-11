@@ -11,9 +11,10 @@ class DataGenerate:
                         'Construction and Real Estate': ['Xây dựng và Vật liệu','Bất động sản'],
                          }
     def getStockCode(self):    
-        return self.data['ticker'].values
+        return np.sort(self.data['ticker'].values)
     def getDomain(self):
-        return self.domain.keys()
+        
+        return sorted(self.domain.keys())
 
     def getDatanalyst(self,val,todate):
        #vl = ["Phần mềm","Bất động sản"]
@@ -42,3 +43,8 @@ class DataGenerate:
 
 
         return frames
+    
+    def getdateOverview(self,code, fromdate, todate):
+        if code != None:
+            df = stock_historical_data(code,fromdate,todate,"1D", "stock")
+            return df
