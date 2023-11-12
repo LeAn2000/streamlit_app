@@ -11,6 +11,7 @@ def custommarkdown(field_name):
 def toggle_expand(code):
     st.session_state.code = code  
 
+
 if __name__ == "__main__":
     data = DataGenerate()
     st.set_page_config(page_title="Stock Prediction", page_icon=None, layout="wide", initial_sidebar_state="auto", menu_items=None)
@@ -20,7 +21,9 @@ if __name__ == "__main__":
         st.session_state.code = None
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>",unsafe_allow_html=True)
-        
+
+    
+
     
     tab1, tab2 = st.tabs(["Sector & Industry","Overview & Predict"])
     with tab1:
@@ -72,38 +75,36 @@ if __name__ == "__main__":
             spacetime = relativedelta(months=12)
             todate = datetime.today()
             fromdate = todate - spacetime
-            
-            with col1:
-                if st.button("1 Week"):
-                    
+            radio = st.radio(
+                "Set label visibility 👇",
+                ["1 Week", "1 Month", "3 Months","6 Months", "9 Months", "12 Months", "All Time"],
+                horizontal=True,
+                index = 5
+            )
+            if radio == "1 Week":
+                    spacetime = relativedelta(days=7)
                     fromdate = todate - spacetime
                     
-            with col2:
-                if st.button("1 Month"):
+            if radio == "1 Month":
                     spacetime = relativedelta(months=1)
                     fromdate = todate - spacetime
                     
-            with col3:
-                if st.button("3 Months"):
+            if radio == "3 Months":
                     spacetime = relativedelta(months=3)
                     fromdate = todate - spacetime
                 
-            with col4:
-                if st.button("6 Months"):
+            if radio == "6 Months":
                     spacetime = relativedelta(months=6)
                     fromdate = todate - spacetime
                 
-            with col5:
-                if st.button("9 Months"):
+            if radio == "9 Months":
                     spacetime = relativedelta(months=9)
                     fromdate = todate - spacetime
                 
-            with col6:
-                if st.button("12 Months"):
+            if radio == "12 Months":
                     spacetime = relativedelta(months=12)
                     fromdate = todate - spacetime
-            with col7:
-                if st.button("All Time"):
+            if radio == "All Time":
                     fromdate  = date(2013,1,1)
             fromdate = fromdate.strftime('%Y-%m-%d')
             todate = todate.strftime('%Y-%m-%d')
@@ -113,3 +114,4 @@ if __name__ == "__main__":
                                         title=f'View {st.session_state.code} Stock Closing Price based on Historical Data', x_label='Date', y_label='Price', 
                                         colors=('lightgray', 'gray'), reference_colors=('black', 'blue'))
                 st.plotly_chart(fig)
+            
