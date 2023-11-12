@@ -1,5 +1,6 @@
 import streamlit as st
 from data import *
+import streamlit.components.v1 as components
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta 
 import plotly.express as px
@@ -18,11 +19,11 @@ if __name__ == "__main__":
     if "predict" not in st.session_state:
         st.session_state.predict = False
     if "code" not in st.session_state:
-        st.session_state.code = None
+        st.session_state.code = "FPT"
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>",unsafe_allow_html=True)
-
     
+            
 
     
     tab1, tab2 = st.tabs(["Sector & Industry","Overview & Predict"])
@@ -58,12 +59,13 @@ if __name__ == "__main__":
     with tab2:
         with st.expander("Overview", True):
             with st.form("form"):
+                filterr = list(data.getStockCode())
                 col1,col2,col3= st.columns([0.3,1,1])
                 col1.write("Input Stock Code:")
                 add_selectbox = col2.selectbox(
                 "a",   
-                data.getStockCode(),
-                index=None,
+                filterr,
+                index=filterr.index(st.session_state.code),
                 placeholder="Select your Stock Code...",
             )
                 
