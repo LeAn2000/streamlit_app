@@ -1,21 +1,22 @@
-.tablefield{
-    font-size: 15px !important;
-    text-align: right;
+.tablefield {
+  font-size: 15px !important;
+  text-align: right;
 }
-.header{
-    text-align: right;
+.header {
+  text-align: right;
 }
-.st-emotion-cache-1n9qh9a{
-    width: 60px;
-}
-
-.st-emotion-cache-x78sv8 p{
-    font-size: 13px;
-}
-.st-emotion-cache-r421ms .e1y5xkzn3{
-    display: none;
+.st-emotion-cache-1n9qh9a {
+  width: 60px;
 }
 
-.st-emotion-cache-la5jjn{
-    margin-top: 8px;
+.st-emotion-cache-x78sv8 p {
+  font-size: 13px;
+}
+.st-emotion-cache-r421ms .e1y5xkzn3,
+.st-emotion-cache-1xw8zd0 .e1y5xkzn3 {
+  display: none;
+}
+
+.st-emotion-cache-la5jjn {
+  margin-top: 8px;
 }

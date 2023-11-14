@@ -1,6 +1,6 @@
 import streamlit as st
 from data import *
-import streamlit.components.v1 as components
+from streamlit.components.v1 import html
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta 
 import plotly.express as px
@@ -10,8 +10,19 @@ def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
 
 def toggle_expand(code):
-    st.session_state.code = code  
+    st.session_state.code = code 
 
+
+def get_previous_weekday():
+    current_date = datetime.now().date()
+    # Subtract one day from the current date
+    previous_date = current_date - timedelta(days=1)
+
+    # Check if the resulting date is a Saturday (5) or Sunday (6)
+    while previous_date.weekday() in {5, 6}:
+        previous_date -= timedelta(days=1)
+
+    return previous_date
 
 if __name__ == "__main__":
     data = DataGenerate()
@@ -23,18 +34,17 @@ if __name__ == "__main__":
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>",unsafe_allow_html=True)
     
-            
-
-    
     tab1, tab2 = st.tabs(["Sector & Industry","Overview & Predict"])
     with tab1:
         domain_multi_selectbox = st.multiselect(
         "Choose your domain name to analyst data",
         data.getDomain(),
+        default = data.getDomain(),
         placeholder="Select your domain name ...",
         max_selections = 5
         )
-        d = st.date_input("Choose trading date", value="today")
+        d = st.date_input("Choose trading date", value=get_previous_weekday())
+
         colms = st.columns((1, 1, 1, 1, 1,1,1,1))
         fields = ["Domain","Ticker","Time","Open","High","Low","Close","Volume"]
         for col, field_name in zip(colms, fields):
@@ -114,6 +124,6 @@ if __name__ == "__main__":
                 chart_data = data.getdateOverview(st.session_state.code, fromdate, todate)
                 fig = candlestick_chart(chart_data, show_volume=True, figure_size=(12, 6), 
                                         title=f'View {st.session_state.code} Stock Closing Price based on Historical Data', x_label='Date', y_label='Price', 
-                                        colors=('lightgray', 'gray'), reference_colors=('black', 'blue'))
-                st.plotly_chart(fig)
+                                        colors=('green', 'red'))
+                st.plotly_chart(fig, use_container_width=True)
             
