@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 import plotly.express as px
 from vnstock import * #import all functions, including functions that provide OHLC data for charting
 from vnstock.chart import * 
+import matplotlib.pyplot as plt
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
 
@@ -23,6 +24,19 @@ def get_previous_weekday():
         previous_date -= timedelta(days=1)
 
     return previous_date
+
+
+def draw(dataset):
+    plt.figure(figsize=(10,6))
+    plt.title(f'Stock Price Trending Prediction')
+    plt.xlabel('Trading Date')
+    plt.ylabel('Closing Price (VND)')
+    plt.plot(dataset['close'])
+    plt.plot(dataset['predict'],color='red')
+    plt.grid(which="major", color='k', linestyle='-.', linewidth=0.5)
+    current_values = plt.gca().get_yticks()
+    plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
+    return plt
 
 if __name__ == "__main__":
     data = DataGenerate()
@@ -128,4 +142,23 @@ if __name__ == "__main__":
                                         colors=('green', 'red'))
                 
                 st.plotly_chart(fig, use_container_width=True)
-            
+        with st.expander("Prediction", True):    
+            radio_predict = st.radio(
+                "Choose Predict Next Day 👇",
+                ["1 Day", "2 Days","3 Days","4 Days","5 Days","6 Days","7 Days"],
+                horizontal=True,
+            )
+            data_before = data.get_before_data(st.session_state.code)
+            data_before.set_index("time")
+            data_before["predict"] = data_before['close']
+            data_before = data_before[['close','predict']]
+            col1, col2 = st.columns([3, 4])
+            if radio_predict == "1 Day":
+                x = data.Predict(1, st.session_state.code)
+                x.index = np.arange(1, len(x) + 1)
+                
+                data_before.loc[len(data_before.index)] = [None,x['Predict Price'].values[0]]
+                x['Predict Price'] = x['Predict Price'].map("{:,}".format)
+              
+                col1.table(x)
+                col2.pyplot(draw(data_before),use_container_width=True)

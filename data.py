@@ -1,7 +1,8 @@
 from vnstock import *
 import numpy as np
 import pandas as pd
-
+from keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
 class DataGenerate:
     def __init__(self):
         self.data = pd.read_csv("title.csv")
@@ -11,6 +12,10 @@ class DataGenerate:
                         'Bank': ['Ngân hàng'],
                         'Construction and Real Estate': ['Xây dựng và Vật liệu','Bất động sản'],
                          }
+        self.model = None
+        self.predictDate = {
+            1: "my_modelcheckpoint.hdf5"
+        }
     def getStockCode(self):    
         return np.sort(self.data['ticker'].values)
     def getDomain(self):
@@ -54,3 +59,49 @@ class DataGenerate:
         if code != None:
             df = stock_historical_data(code,fromdate,todate,"1D", "stock")
             return df
+        
+    
+    def get_previous_business_day(self,current_date, days):
+        for _ in range(days):
+            current_date -= timedelta(days=1)
+            # Skip Saturday (5) and Sunday (6)
+            while current_date.weekday() in {5, 6}:
+                current_date -= timedelta(days=1)
+        return current_date
+    
+    def InitModel(self, filepath):  
+        self.model = load_model(filepath)
+        
+    def get_before_data(self,code):
+        current_date = datetime.now().date()
+        # Get the date 60 business days before the current date
+        previous_date = self.get_previous_business_day(current_date, 61)
+        return stock_historical_data(code,str(previous_date),str(current_date))
+    
+
+    def Predict(self, day, code):  
+        scaler = MinMaxScaler(feature_range = (0,1))
+        self.InitModel(self.predictDate[day])
+        print(self.model)
+        input_data = self.get_before_data(code)
+        inputs = input_data['close'].to_numpy()
+        inputs = inputs.reshape(-1,1)
+        inputs = scaler.fit_transform(inputs)
+        X_test = []
+        X_test.append(inputs)
+        X_test = np.array(X_test)
+        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+        predicted_stock_price = self.model.predict(X_test)
+        predicted_stock_price = scaler.inverse_transform(predicted_stock_price)
+        prices = []
+        days = []
+        for i in range(0,day):
+            prices.append(predicted_stock_price[i][0])
+            if i == 0:
+                days.append('In the next day')
+            else:
+                days.append(f'In the next {i+1} days')
+            
+        df =  pd.DataFrame({"The next day":days, "Predict Price": prices})
+       
+        return df
