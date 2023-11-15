@@ -39,7 +39,7 @@ if __name__ == "__main__":
         domain_multi_selectbox = st.multiselect(
         "Choose your domain name to analyst data",
         data.getDomain(),
-        default = data.getDomain(),
+        default = 'Technology & Retail Trade',
         placeholder="Select your domain name ...",
         max_selections = 5
         )
@@ -49,9 +49,10 @@ if __name__ == "__main__":
         fields = ["Domain","Ticker","Time","Open","High","Low","Close","Volume"]
         for col, field_name in zip(colms, fields):
             if field_name != "Ticker" and field_name != 'Domain':
-                col.markdown(f"<p class='header'>{field_name}</p>",unsafe_allow_html=True)
+                col.markdown(f"<p class='header bold'>{field_name}</p>",unsafe_allow_html=True)
             else:
-                col.markdown(field_name)
+                col.markdown(f"<p class='bold'>{field_name}</p>",unsafe_allow_html=True)
+        st.markdown("""<hr style="height:1px;border:none;color:#333;background-color:#333;" /> """, unsafe_allow_html=True)
         df = data.getDatanalyst(domain_multi_selectbox, d).to_dict("records")
         for i in df:
             col1, col2, col3, col4, col5, col6, col7, col8 = st.columns((1,1, 1, 1, 1, 1, 1, 1))
@@ -88,7 +89,7 @@ if __name__ == "__main__":
             todate = datetime.today()
             fromdate = todate - spacetime
             radio = st.radio(
-                "Set label visibility 👇",
+                "Choose Trading Time 👇",
                 ["1 Week", "1 Month", "3 Months","6 Months", "9 Months", "12 Months", "All Time"],
                 horizontal=True,
                 index = 5
@@ -125,5 +126,6 @@ if __name__ == "__main__":
                 fig = candlestick_chart(chart_data, show_volume=True, figure_size=(12, 6), 
                                         title=f'View {st.session_state.code} Stock Closing Price based on Historical Data', x_label='Date', y_label='Price', 
                                         colors=('green', 'red'))
+                
                 st.plotly_chart(fig, use_container_width=True)
             

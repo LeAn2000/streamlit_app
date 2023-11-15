@@ -1,6 +1,7 @@
 from vnstock import *
 import numpy as np
 import pandas as pd
+
 class DataGenerate:
     def __init__(self):
         self.data = pd.read_csv("title.csv")
@@ -15,7 +16,7 @@ class DataGenerate:
     def getDomain(self):
         
         return sorted(self.domain.keys())
-
+    
     def getDatanalyst(self,val,todate):
        #vl = ["Phần mềm","Bất động sản"]
         
@@ -36,6 +37,11 @@ class DataGenerate:
                 frames = pd.concat([frames,a], axis=0)
                 for a in _[__]:
                     frame = stock_historical_data(a,todate,todate)
+                    frame['open'] = frame['open'].map("{:,}".format)
+                    frame['high'] = frame['high'].map("{:,}".format)
+                    frame['low'] = frame['low'].map("{:,}".format)
+                    frame['close'] = frame['close'].map("{:,}".format)
+                    frame['volume'] = frame['volume'].map("{:,}".format)
                     frame.insert(loc=0, column='_', value="")
                     #frame.insert(loc=1, column="check", value=f"st.button({frame.ticker.values[0]})")
                     frames = pd.concat([frames,frame], axis=0)
