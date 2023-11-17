@@ -23,7 +23,7 @@ class DataGenerate:
             6: "model_6.hdf5",
             7: "model_7.hdf5",
         }
-        self.indicator = 200
+        self.indicator = 100
     def getStockCode(self):    
         return np.sort(self.data['ticker'].values)
     def getDomain(self):
