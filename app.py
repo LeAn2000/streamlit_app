@@ -28,14 +28,18 @@ def get_previous_weekday():
 
 def draw(dataset):
     plt.figure(figsize=(10,6))
-    plt.title(f'Stock Price Trending Prediction')
+    plt.title(f'Stock Close Price Trending Prediction')
     plt.xlabel('Trading Date')
     plt.ylabel('Closing Price (VND)')
-    plt.plot(dataset['close'])
-    plt.plot(dataset['predict'],color='red')
+    for i in range(len(dataset)):
+        plt.plot(dataset.loc[i:i+1,'close'], color=('C1' if dataset.loc[i:i,'condition'][i] == 1 else 'C0'))
     plt.grid(which="major", color='k', linestyle='-.', linewidth=0.5)
+
+# after plotting the data, format the labels
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
+    current_x = plt.gca().get_xticks()
+    plt.gca().set_xticklabels([f'{x+1}' for x in current_x])
     return plt
 
 if __name__ == "__main__":
@@ -148,17 +152,27 @@ if __name__ == "__main__":
                 ["1 Day", "2 Days","3 Days","4 Days","5 Days","6 Days","7 Days"],
                 horizontal=True,
             )
-            data_before = data.get_before_data(st.session_state.code)
+            data_before = data.get_before_data(st.session_state.code).tail(5)
             data_before.set_index("time")
-            data_before["predict"] = data_before['close']
-            data_before = data_before[['close','predict']]
+            data_before["condition"] = False
+            data_before["condition"].iloc[-1] = True
+            data_before = data_before[['close','condition']]
+            
             col1, col2 = st.columns([3, 4])
-            if radio_predict == "1 Day":
-                x = data.Predict(1, st.session_state.code)
-                x.index = np.arange(1, len(x) + 1)
-                
-                data_before.loc[len(data_before.index)] = [None,x['Predict Price'].values[0]]
-                x['Predict Price'] = x['Predict Price'].map("{:,}".format)
-              
-                col1.table(x)
-                col2.pyplot(draw(data_before),use_container_width=True)
+            step = {
+                 "1 Day": 1, "2 Days":2,"3 Days":3,"4 Days":4,"5 Days":5,"6 Days":6,"7 Days": 7
+            }
+            predict = data.Predict(step[radio_predict], st.session_state.code)       
+            predict.index = np.arange(1, len(predict) + 1)
+            for i in range(step[radio_predict]):
+                data_before.loc[len(data_before.index)] = [predict['Predicted Price'].values[i], True]
+
+
+
+            predict['Predicted Price'] = predict['Predicted Price'].map("{0:,.2f}".format)
+            # predict['Predict with Indicator'] = predict['Predict with Indicator'].map("{0:,.2f}".format)
+            col1.table(predict)
+            col2.empty()
+            data_before = data_before.reset_index(drop=True)
+            col2.pyplot(draw(data_before),use_container_width=True)
+            

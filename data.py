@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+from datetime import datetime, date
 class DataGenerate:
     def __init__(self):
         self.data = pd.read_csv("title.csv")
@@ -14,8 +15,15 @@ class DataGenerate:
                          }
         self.model = None
         self.predictDate = {
-            1: "my_modelcheckpoint.hdf5"
+            1: "model_1.hdf5",
+            2: "model_2.hdf5",
+            3: "model_3.hdf5",
+            4: "model_4.hdf5",
+            5: "model_5.hdf5",
+            6: "model_6.hdf5",
+            7: "model_7.hdf5",
         }
+        self.indicator = 200
     def getStockCode(self):    
         return np.sort(self.data['ticker'].values)
     def getDomain(self):
@@ -61,47 +69,63 @@ class DataGenerate:
             return df
         
     
-    def get_previous_business_day(self,current_date, days):
-        for _ in range(days):
-            current_date -= timedelta(days=1)
-            # Skip Saturday (5) and Sunday (6)
-            while current_date.weekday() in {5, 6}:
-                current_date -= timedelta(days=1)
-        return current_date
-    
     def InitModel(self, filepath):  
         self.model = load_model(filepath)
         
     def get_before_data(self,code):
         current_date = datetime.now().date()
-        # Get the date 60 business days before the current date
-        previous_date = self.get_previous_business_day(current_date, 61)
-        return stock_historical_data(code,str(previous_date),str(current_date))
+        return stock_historical_data(code, date(2013,1,1).strftime('%Y-%m-%d'),str(current_date)).tail(60)
     
+    def CT(self,a, b):
+        return ((self.indicator+1)*b)-(self.indicator*a)
+    
+    def PredictwithCT(self,a):
+        a = np.array(a)
+        a = a.reshape(1,-1)[0]
+        count = len(a)
+        new_array = []
+        new_array.append(a[0])
+        for i in range(count):
+            if i != count - 1:
+                d = self.CT(a[i],a[i+1])
+                new_array.append(d) 
+        return new_array 
+
 
     def Predict(self, day, code):  
         scaler = MinMaxScaler(feature_range = (0,1))
         self.InitModel(self.predictDate[day])
-        print(self.model)
+
         input_data = self.get_before_data(code)
-        inputs = input_data['close'].to_numpy()
-        inputs = inputs.reshape(-1,1)
+        inputs = input_data[['close', 'volume']].to_numpy()
+        inputs = inputs.reshape(-1,2)
         inputs = scaler.fit_transform(inputs)
+        #
         X_test = []
         X_test.append(inputs)
         X_test = np.array(X_test)
-        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 2))
         predicted_stock_price = self.model.predict(X_test)
-        predicted_stock_price = scaler.inverse_transform(predicted_stock_price)
+        future_data_predicted = []
+        ###########
+        for i in range(0, day):
+            new_predicted_stock_price = predicted_stock_price[:,i].reshape(-1,1)
+            new_predicted_stock_price = np.c_[new_predicted_stock_price, np.ones(1)]
+            new_predicted_stock_price = scaler.inverse_transform(new_predicted_stock_price)
+            future_data_predicted.append(new_predicted_stock_price[:,0])
+
+
+        predict_to_draw = self.PredictwithCT(future_data_predicted)
+
         prices = []
         days = []
         for i in range(0,day):
-            prices.append(predicted_stock_price[i][0])
+            prices.append(future_data_predicted[i][0])
             if i == 0:
                 days.append('In the next day')
             else:
                 days.append(f'In the next {i+1} days')
             
-        df =  pd.DataFrame({"The next day":days, "Predict Price": prices})
-       
+        # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
+        df =  pd.DataFrame({"The next day":days, "Predicted Price": predict_to_draw})
         return df
