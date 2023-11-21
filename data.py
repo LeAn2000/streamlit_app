@@ -122,9 +122,9 @@ class DataGenerate:
         for i in range(0,day):
             prices.append(future_data_predicted[i][0])
             if i == 0:
-                days.append('In the next day')
+                days.append('Next day')
             else:
-                days.append(f'In the next {i+1} days')
+                days.append(f'Next {i+1} days')
             
         # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
         df =  pd.DataFrame({"The next day":days, "Predicted Price": predict_to_draw})

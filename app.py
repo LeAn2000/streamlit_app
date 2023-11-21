@@ -27,19 +27,35 @@ def get_previous_weekday():
 
 
 def draw(dataset):
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(8,4))
     plt.title(f'Stock Close Price Trending Prediction')
     plt.xlabel('Trading Date')
     plt.ylabel('Closing Price (VND)')
+    # y = dataset['close'].to_list()
+    # index = list(dataset.index)
+
+    
     for i in range(len(dataset)):
-        plt.plot(dataset.loc[i:i+1,'close'], color=('C1' if dataset.loc[i:i,'condition'][i] == 1 else 'C0'))
+        plt.plot(dataset.loc[i:i+1,'time'],dataset.loc[i:i+1,'close'],"bo-", color=('C1' if dataset.loc[i:i,'condition'][i] == 1 else 'C0'))
+    
     plt.grid(which="major", color='k', linestyle='-.', linewidth=0.5)
 
 # after plotting the data, format the labels
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
-    current_x = plt.gca().get_xticks()
-    plt.gca().set_xticklabels([f'{x+1}' for x in current_x])
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=8)
+    # current_x = plt.gca().get_xticks()
+    # plt.gca().set_xticklabels([f'{x+1}' for x in current_x])
+
+    # for x,y in zip(index,y):
+    #     label = "{:.2f}".format(y)
+    #     plt.annotate(label, # this is the text
+    #              (x,y), # these are the coordinates to position the label
+    #              textcoords="offset points", # how to position the text
+    #              xytext=(0,10), # distance from text to points (x,y)
+    #             fontsize=5,
+    #              ha='right') # horizontal alignment can be left, right or center
     return plt
 
 if __name__ == "__main__":
@@ -156,19 +172,16 @@ if __name__ == "__main__":
             data_before.set_index("time")
             data_before["condition"] = False
             data_before["condition"].iloc[-1] = True
-            data_before = data_before[['close','condition']]
-            
-            col1, col2 = st.columns([3, 4])
+            data_before = data_before[['time','close','condition']]
+            data_before['time'] = data_before['time'].astype(str)
+            col1, col2 = st.columns([1, 5])
             step = {
                  "1 Day": 1, "2 Days":2,"3 Days":3,"4 Days":4,"5 Days":5,"6 Days":6,"7 Days": 7
             }
             predict = data.Predict(step[radio_predict], st.session_state.code)       
             predict.index = np.arange(1, len(predict) + 1)
             for i in range(step[radio_predict]):
-                data_before.loc[len(data_before.index)] = [predict['Predicted Price'].values[i], True]
-
-
-
+                data_before.loc[len(data_before.index)] = [predict["The next day"].values[i],predict['Predicted Price'].values[i], True]
             predict['Predicted Price'] = predict['Predicted Price'].map("{0:,.2f}".format)
             # predict['Predict with Indicator'] = predict['Predict with Indicator'].map("{0:,.2f}".format)
             col1.table(predict)
