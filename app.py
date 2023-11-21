@@ -7,6 +7,7 @@ import plotly.express as px
 from vnstock import * #import all functions, including functions that provide OHLC data for charting
 from vnstock.chart import * 
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
 
@@ -33,13 +34,15 @@ def draw(dataset):
     plt.ylabel('Closing Price (VND)')
     # y = dataset['close'].to_list()
     # index = list(dataset.index)
-
     
     for i in range(len(dataset)):
         plt.plot(dataset.loc[i:i+1,'time'],dataset.loc[i:i+1,'close'],"bo-", color=('C1' if dataset.loc[i:i,'condition'][i] == 1 else 'C0'))
     
+   
     plt.grid(which="major", color='k', linestyle='-.', linewidth=0.5)
-
+    red_patch = mpatches.Patch(color='C0', label='Actual Price')
+    blue_patch = mpatches.Patch(color='C1', label='Predicted Price')
+    plt.legend(handles=[red_patch,blue_patch])
 # after plotting the data, format the labels
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
@@ -56,6 +59,8 @@ def draw(dataset):
     #              xytext=(0,10), # distance from text to points (x,y)
     #             fontsize=5,
     #              ha='right') # horizontal alignment can be left, right or center
+
+
     return plt
 
 if __name__ == "__main__":
