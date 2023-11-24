@@ -27,11 +27,11 @@ def get_previous_weekday():
     return previous_date
 
 
-def draw(dataset):
-    plt.figure(figsize=(8,4))
-    plt.title(f'Stock Close Price Trending Prediction')
-    plt.xlabel('Trading Date')
-    plt.ylabel('Closing Price (VND)')
+def draw(dataset, ti):
+    plt.figure(figsize=(8,2))
+    plt.title(f'{ti} Stock Closing Price Trending Prediction', fontsize=8)
+    plt.xlabel('Trading Date', fontsize=8)
+    plt.ylabel('Closing Price (VND)', fontsize=8)
     # y = dataset['close'].to_list()
     # index = list(dataset.index)
     
@@ -42,12 +42,13 @@ def draw(dataset):
     plt.grid(which="major", color='k', linestyle='-.', linewidth=0.5)
     red_patch = mpatches.Patch(color='C0', label='Actual Price')
     blue_patch = mpatches.Patch(color='C1', label='Predicted Price')
-    plt.legend(handles=[red_patch,blue_patch])
+    plt.legend(handles=[red_patch,blue_patch],fontsize=5)
+
 # after plotting the data, format the labels
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
-    plt.xticks(fontsize=5)
-    plt.yticks(fontsize=8)
+    plt.xticks(fontsize=5,weight='bold')
+    plt.yticks(fontsize=6,weight='bold')
     # current_x = plt.gca().get_xticks()
     # plt.gca().set_xticklabels([f'{x+1}' for x in current_x])
 
@@ -176,7 +177,7 @@ if __name__ == "__main__":
             data_before = data.get_before_data(st.session_state.code).tail(5)
             data_before.set_index("time")
             data_before["condition"] = False
-            data_before["condition"].iloc[-1] = True
+            #data_before["condition"].iloc[-1] = True
             data_before = data_before[['time','close','condition']]
             data_before['time'] = data_before['time'].astype(str)
             col1, col2 = st.columns([1, 5])
@@ -192,5 +193,5 @@ if __name__ == "__main__":
             col1.table(predict)
             col2.empty()
             data_before = data_before.reset_index(drop=True)
-            col2.pyplot(draw(data_before),use_container_width=True)
+            col2.pyplot(draw(data_before,st.session_state.code),use_container_width=True)
             
