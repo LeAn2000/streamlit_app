@@ -193,5 +193,6 @@ if __name__ == "__main__":
             col1.table(predict)
             col2.empty()
             data_before = data_before.reset_index(drop=True)
+            print("I'm here to listen update ")
             col2.pyplot(draw(data_before,st.session_state.code),use_container_width=True)
             
