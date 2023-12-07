@@ -137,7 +137,6 @@ if __name__ == "__main__":
         with st.expander("Overview", True):
             with st.form("form"):
                 filterr = list(data.getStockCode())
-                print(filterr)
                 col1, col2, col3 = st.columns([0.3, 1, 1])
                 col1.write("Input Stock Code:")
                 add_selectbox = col2.selectbox(
@@ -217,7 +216,11 @@ if __name__ == "__main__":
                 ["1 Day", "2 Days", "3 Days", "4 Days", "5 Days", "6 Days", "7 Days"],
                 horizontal=True,
             )
+            col1, col2 = st.columns(2)
             data_before_origin = data.get_before_data(st.session_state.code).tail(7)
+            lastdate_price = data_before_origin["close"].values[-1]
+            print(type(lastdate_price))
+            lastdate = data_before_origin["time"].values[-1]
             data_before = data_before_origin
             data_before.set_index("time")
             data_before["condition"] = False
@@ -233,7 +236,10 @@ if __name__ == "__main__":
                 "6 Days": 6,
                 "7 Days": 7,
             }
+
+
             predict = data.Predict(step[radio_predict], st.session_state.code)
+            meanPrice = predict["Predicted Price (VND)"].mean()
             reset_index(predict)
             for i in range(step[radio_predict]):
                 data_before.loc[len(data_before.index)] = [
@@ -258,12 +264,22 @@ if __name__ == "__main__":
             newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
                 "{0:,.0f}".format
             )
-            st.dataframe(
-                newframe,
-                use_container_width=False,
-                hide_index=True,
-            )
+            with col1:
+                st.dataframe(
+                    newframe,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            with col2:
+                st.code(f"Last date is {lastdate} with price: {lastdate_price:,} VND")
+                st.code(f"Mean of {step[radio_predict]} day(s) predict price: {meanPrice:,.0f} VND")
+                if lastdate_price > meanPrice:
+                    st.code("Trend will be Downtrend ")
+                else:
+                    st.code("Trend will be UpTrend")
             print("I'm here to listen update ")
             st.pyplot(
                 draw(data_before, st.session_state.code), use_container_width=True
             )
+        with st.expander("Check Predicted Result", True):
+            st.code(1)
