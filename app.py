@@ -137,6 +137,7 @@ if __name__ == "__main__":
         with st.expander("Overview", True):
             with st.form("form"):
                 filterr = list(data.getStockCode())
+                print(filterr)
                 col1, col2, col3 = st.columns([0.3, 1, 1])
                 col1.write("Input Stock Code:")
                 add_selectbox = col2.selectbox(
@@ -236,12 +237,12 @@ if __name__ == "__main__":
             reset_index(predict)
             for i in range(step[radio_predict]):
                 data_before.loc[len(data_before.index)] = [
-                    predict["The next day"].values[i],
-                    predict["Predicted Price"].values[i],
+                    predict["The Next Day"].values[i],
+                    predict["Predicted Price (VND)"].values[i],
                     True,
                 ]
-            predict["Predicted Price"] = predict["Predicted Price"].map(
-                "{0:,.0f} VNĐ".format
+            predict["Predicted Price (VND)"] = predict["Predicted Price (VND)"].map(
+                "{0:,.0f}".format
             )
             # predict['Predict with Indicator'] = predict['Predict with Indicator'].map("{0:,.2f}".format)
             data_before = data_before.reset_index(drop=True)
@@ -250,12 +251,12 @@ if __name__ == "__main__":
             newframe = pd.concat([s1, predict], axis=1).reset_index(drop=True)
             reset_index(newframe)
             newframe = newframe.rename(
-                columns={"time": "Trading Date", "close": "Actual Price"}
+                columns={"time": "Trading Date", "close": "Actual Price (VND)"}
             ).fillna("")
 
             newframe.insert(loc=0, column="No.", value=newframe.index)
-            newframe["Actual Price"] = newframe["Actual Price"].map(
-                "{0:,.0f} VNĐ".format
+            newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
+                "{0:,.0f}".format
             )
             st.dataframe(
                 newframe,

@@ -80,3 +80,29 @@ class PredictStockPrice:
             future_data_predicted.append(new_predicted_stock_price[:, 0])
 
         return self.PredictwithCT(future_data_predicted)
+
+
+# import firebase_admin
+# from firebase_admin import credentials, firestore
+
+# cred = credentials.Certificate("firebase_sdk.json")
+# firebase_admin.initialize_app(cred)
+
+# db = firestore.client()
+
+# time = datetime.now().strftime("%Y%m%d")
+# idcode = "FPT"
+# code = PredictStockPrice(idcode)
+# predict = db.collection("PredictStock")
+# predict.document(f"{time}-{idcode}").set(
+#     dict({"data": [ModelPredict(i, code.Predict(i)).to_dict() for i in range(1, 8)]})
+# )
+
+
+# doc_ref = db.collection("PredictStock").document("20231205-FPT")
+
+# doc = doc_ref.get()
+# if doc.exists:
+#     print(f"Document data: {doc.to_dict()}")
+# else:
+#     print("No such document!")
