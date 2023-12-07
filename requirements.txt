@@ -92,3 +92,4 @@ watchdog==3.0.0
 Werkzeug==3.0.1
 wrapt==1.14.1
 zipp==3.17.0
+firebase-admin==6.3.0
