@@ -282,4 +282,5 @@ if __name__ == "__main__":
                 draw(data_before, st.session_state.code), use_container_width=True
             )
         with st.expander("Check Predicted Result", True):
-            st.code(1)
+            st.code(2)
+######
