@@ -1,5 +1,6 @@
 import streamlit as st
 from data import *
+from ownfb import *
 from streamlit.components.v1 import html
 from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
@@ -12,7 +13,16 @@ import matplotlib.patches as mpatches
 
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
-
+def date_by_adding_business_days(from_date, add_days):
+    business_days_to_add = add_days
+    current_date = from_date
+    while business_days_to_add > 0:
+        current_date += timedelta(days=1)
+        weekday = current_date.weekday()
+        if weekday >= 5: # sunday = 6
+            continue
+        business_days_to_add -= 1
+    return current_date
 
 def toggle_expand(code):
     st.session_state.code = code
@@ -77,6 +87,7 @@ def draw(dataset, ti):
 
 if __name__ == "__main__":
     data = DataGenerate()
+    fire = MyOwnFirebase()
     st.set_page_config(
         page_title="Stock Prediction",
         page_icon=None,
@@ -100,7 +111,7 @@ if __name__ == "__main__":
             placeholder="Select your domain name ...",
             max_selections=5,
         )
-        d = st.date_input("Choose trading date", value=get_previous_weekday())
+        d = st.date_input("Choose trading date", value=get_previous_weekday(),format="YYYY-MM-DD")
 
         colms = st.columns((1, 1, 1, 1, 1, 1, 1, 1))
         fields = ["Domain", "Ticker", "Time", "Open", "High", "Low", "Close", "Volume"]
@@ -219,7 +230,7 @@ if __name__ == "__main__":
             col1, col2 = st.columns(2)
             data_before_origin = data.get_before_data(st.session_state.code).tail(7)
             lastdate_price = data_before_origin["close"].values[-1]
-            print(type(lastdate_price))
+            
             lastdate = data_before_origin["time"].values[-1]
             data_before = data_before_origin
             data_before.set_index("time")
@@ -239,7 +250,7 @@ if __name__ == "__main__":
 
 
             predict = data.Predict(step[radio_predict], st.session_state.code)
-            meanPrice = predict["Predicted Price (VND)"].mean()
+            meanPrice = predict["Predicted Price (VND)"].values[-1]
             reset_index(predict)
             for i in range(step[radio_predict]):
                 data_before.loc[len(data_before.index)] = [
@@ -271,16 +282,41 @@ if __name__ == "__main__":
                     hide_index=True,
                 )
             with col2:
-                st.code(f"Last date is {lastdate} with price: {lastdate_price:,} VND")
-                st.code(f"Mean of {step[radio_predict]} day(s) predict price: {meanPrice:,.0f} VND")
+                st.code(f"Last trading date in {lastdate} with actual price is: {lastdate_price:,} VND")
+                st.code(f"The predicted price in the next {step[radio_predict]} day(s) is: {meanPrice:,.0f} VND")
                 if lastdate_price > meanPrice:
-                    st.code("Trend will be Downtrend ")
+                    st.code(f"Trending prediction maybe Downtrend in the next {step[radio_predict]} day(s)" )
                 else:
-                    st.code("Trend will be UpTrend")
-            print("I'm here to listen update ")
+                    st.code(f"Trending prediction maybe Uptrend in the next {step[radio_predict]} day(s)")
+           
             st.pyplot(
                 draw(data_before, st.session_state.code), use_container_width=True
             )
-        with st.expander("Check Predicted Result", True):
-            st.code(2)
-######
+        with st.expander("Check Predicted Price Result", True):
+            col1,col2 = st.columns([1,3])
+            pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD")
+            patern = f'{pre_d.strftime("%Y%m%d")}-{st.session_state.code}'           
+            document = fire.getDocumentData(patern)
+            if document != {}:
+                dex = step[radio_predict]
+                checkdate = [date_by_adding_business_days(pre_d, i) for i in range(1,dex+1)]
+                check_dataFrame = pd.DataFrame({"Real Date":checkdate})
+                realdata = data.getdateOverview(st.session_state.code, str(checkdate[0]), str(checkdate[-1]))
+                if len(realdata) != 0:
+                    realdata = realdata[["time","close"]]
+                    realdata = realdata.rename(columns={"time":"Real Date", "close":"Actual Price (VND)"})
+                    check_dataFrame = check_dataFrame.merge(realdata,on="Real Date", how="left")
+                    check_dataFrame["Actual Price (VND)"] = check_dataFrame["Actual Price (VND)"].apply(
+                        lambda x : "{0:,.0f}".format(x) if str(x) != "nan" else ""   
+                    )
+                else:
+                    check_dataFrame["Actual Price (VND)"] = "" 
+                predicted_price = pd.DataFrame({"Predicted Price (VND)":document["data"][dex-1][str(dex)]})
+                check_dataFrame = check_dataFrame.merge(predicted_price, left_index=True, right_index=True, how="inner")
+                check_dataFrame["Predicted Price (VND)"] = check_dataFrame["Predicted Price (VND)"].map(
+                    "{0:,.0f}".format
+                )
+                check_dataFrame = check_dataFrame.fillna("")
+                col2.dataframe(check_dataFrame,use_container_width=True,hide_index=True,)
+            else:
+                col2.write("Do not have predicted data !")

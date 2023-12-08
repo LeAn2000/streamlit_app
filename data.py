@@ -82,9 +82,12 @@ class DataGenerate:
         return frames
 
     def getdateOverview(self, code, fromdate, todate):
-        if code != None:
-            df = stock_historical_data(code, fromdate, todate, "1D", "stock")
-            return df
+        try:
+            if code != None:
+                df = stock_historical_data(code, fromdate, todate, "1D", "stock")
+                return df
+        except:
+            return pd.DataFrame()
 
     def InitModel(self, filepath):
         self.model = load_model(filepath)
