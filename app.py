@@ -298,7 +298,7 @@ if __name__ == "__main__":
             pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD",min_value=datetime.today() -timedelta(days=7),max_value=datetime.today() )
             patern = f'{pre_d.strftime("%Y%m%d")}-{st.session_state.code}'           
             document = fire.getDocumentData(patern)
-            
+         ########   
             if document != {}:
                 dex = step[radio_predict]
                 checkdate = [date_by_adding_business_days(pre_d, i) for i in range(1,dex+1)]
