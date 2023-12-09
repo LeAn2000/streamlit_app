@@ -49,9 +49,6 @@ def draw(dataset, ti):
     plt.title(f"{ti} Stock Closing Price Trending Prediction", fontsize=8)
     plt.xlabel("Trading Date", fontsize=8)
     plt.ylabel("Closing Price (VND)", fontsize=8)
-    # y = dataset['close'].to_list()
-    # index = list(dataset.index)
-
     for i in range(len(dataset)):
         plt.plot(
             dataset.loc[i : i + 1, "time"],
@@ -64,26 +61,30 @@ def draw(dataset, ti):
     red_patch = mpatches.Patch(color="C0", label="Actual Price")
     blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
     plt.legend(handles=[red_patch, blue_patch], fontsize=5)
-
-    # after plotting the data, format the labels
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
     plt.xticks(fontsize=4, weight="bold")
     plt.yticks(fontsize=5, weight="bold")
-    # current_x = plt.gca().get_xticks()
-    # plt.gca().set_xticklabels([f'{x+1}' for x in current_x])
-
-    # for x,y in zip(index,y):
-    #     label = "{:.2f}".format(y)
-    #     plt.annotate(label, # this is the text
-    #              (x,y), # these are the coordinates to position the label
-    #              textcoords="offset points", # how to position the text
-    #              xytext=(0,10), # distance from text to points (x,y)
-    #             fontsize=5,
-    #              ha='right') # horizontal alignment can be left, right or center
-
     return plt
 
+
+def drawCheckpoint(Ax, Ay, Px, Py,ti):
+    plt.figure(figsize=(8, 2))
+    plt.title(f"{ti} Stock Closing Price Trending Predicted", fontsize=8)
+    plt.xlabel("Trading Date", fontsize=8)
+    plt.ylabel("Closing Price (VND)", fontsize=8)
+    if len(Ax)>0:
+        plt.plot(Ax, Ay,"bo-", color="C0")
+    plt.plot(Px, Py, "bo-",color="C1")
+    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.5)
+    red_patch = mpatches.Patch(color="C0", label="Actual Price")
+    blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
+    plt.legend(handles=[red_patch, blue_patch], fontsize=5)
+    current_values = plt.gca().get_yticks()
+    plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
+    plt.xticks(fontsize=4, weight="bold")
+    plt.yticks(fontsize=5, weight="bold")
+    return plt
 
 if __name__ == "__main__":
     data = DataGenerate()
@@ -294,15 +295,20 @@ if __name__ == "__main__":
             )
         with st.expander("Check Predicted Price Result", True):
             col1,col2 = st.columns([1,3])
-            pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD")
+            pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD",min_value=datetime.today() -timedelta(days=7),max_value=datetime.today() )
             patern = f'{pre_d.strftime("%Y%m%d")}-{st.session_state.code}'           
             document = fire.getDocumentData(patern)
+            
             if document != {}:
                 dex = step[radio_predict]
                 checkdate = [date_by_adding_business_days(pre_d, i) for i in range(1,dex+1)]
                 check_dataFrame = pd.DataFrame({"Real Date":checkdate})
                 realdata = data.getdateOverview(st.session_state.code, str(checkdate[0]), str(checkdate[-1]))
+                Ax,Ay,Px,Py = [],[],[],[]
+                Px = [i.strftime("%Y-%m-%d") for i in checkdate]
                 if len(realdata) != 0:
+                    Ax =  [i.strftime("%Y-%m-%d") for i in realdata.time.values]
+                    Ay = realdata.close.values
                     realdata = realdata[["time","close"]]
                     realdata = realdata.rename(columns={"time":"Real Date", "close":"Actual Price (VND)"})
                     check_dataFrame = check_dataFrame.merge(realdata,on="Real Date", how="left")
@@ -311,12 +317,16 @@ if __name__ == "__main__":
                     )
                 else:
                     check_dataFrame["Actual Price (VND)"] = "" 
-                predicted_price = pd.DataFrame({"Predicted Price (VND)":document["data"][dex-1][str(dex)]})
+                Py = document["data"][dex-1][str(dex)]
+                predicted_price = pd.DataFrame({"Predicted Price (VND)":Py})
                 check_dataFrame = check_dataFrame.merge(predicted_price, left_index=True, right_index=True, how="inner")
                 check_dataFrame["Predicted Price (VND)"] = check_dataFrame["Predicted Price (VND)"].map(
                     "{0:,.0f}".format
                 )
                 check_dataFrame = check_dataFrame.fillna("")
                 col2.dataframe(check_dataFrame,use_container_width=True,hide_index=True,)
+                st.pyplot(drawCheckpoint(Ax,Ay,Px,Py,st.session_state.code), use_container_width=True)
             else:
-                col2.write("Do not have predicted data !")
+                col2.code("Don't have predicted data !")
+
+            
