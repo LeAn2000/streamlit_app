@@ -291,7 +291,7 @@ if __name__ == "__main__":
             predict.insert(loc=0, column="No.", value=predict.index)
             # #newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
             #     "{0:,.0f}".format)
-            
+            #####
             with col1:
                 st.dataframe(
                     predict,
