@@ -74,7 +74,7 @@ def draw(dataset, ti):
     plt.grid(which="major", color="k", linestyle="-.", linewidth=0.1)
     red_patch = mpatches.Patch(color="C0", label="Actual Price")
     blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
-    plt.legend(handles=[red_patch, blue_patch], fontsize=5)
+    plt.legend(handles=[red_patch, blue_patch], fontsize=5,loc="upper left")
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
     plt.xticks(fontsize=4, weight="bold")
@@ -83,20 +83,45 @@ def draw(dataset, ti):
 
 
 def drawCheckpoint(Ax, Ay, Px, Py,ti):
-    plt.figure(figsize=(8, 2))
-    plt.title(f"{ti} Stock Closing Price Trending Predicted", fontsize=8)
-    plt.xlabel("Trading Date", fontsize=8)
-    plt.ylabel("Closing Price (VND)", fontsize=8)
+    plt.figure(figsize=(8, 3))
+    plt.title(f"{ti} Stock Closing Price Trending Predicted", fontsize=5,pad=20)
+    plt.xlabel("Trading Date", fontsize=5)
+    plt.ylabel("Closing Price (VND)", fontsize=5)
     if len(Ax)>0:
         plt.plot(Ax, Ay,"bo-", color="C0")
+        for x,y in zip([i for i in range(len(Ay))], Ay):
+            label = "{0:,.0f}".format(y)
+            plt.annotate(label,
+                        (x,y),
+                        textcoords="offset points",
+                        xytext=(0,10),
+                        fontsize=5,
+                        weight="bold",
+                        arrowprops=dict(arrowstyle="->",
+                                connectionstyle="arc3"),
+                        ha="center"
+                        )
     plt.plot(Px, Py, "bo-",color="C1")
-    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.5)
+    for x,y in zip([i for i in range(len(Py))], Py):
+        label = "{0:,.0f}".format(y)
+        plt.annotate(label,
+                     (x,y),
+                     textcoords="offset points",
+                     xytext=(0,10),
+                     fontsize=5,
+                     weight="bold",
+                     arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"),
+                     ha="center"
+                     )
+
+    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.1)
     red_patch = mpatches.Patch(color="C0", label="Actual Price")
     blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
-    plt.legend(handles=[red_patch, blue_patch], fontsize=5)
+    plt.legend(handles=[red_patch, blue_patch], fontsize=5,bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
-    plt.xticks(fontsize=4, weight="bold")
+    plt.xticks(fontsize=5, weight="bold")
     plt.yticks(fontsize=5, weight="bold")
     return plt
 
@@ -289,6 +314,7 @@ if __name__ == "__main__":
             # ).fillna("")
 
             predict.insert(loc=0, column="No.", value=predict.index)
+            predict["No."] = predict["No."].astype(str)
             # #newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
             #     "{0:,.0f}".format)
             #####
@@ -311,7 +337,7 @@ if __name__ == "__main__":
             )
         with st.expander("Check Predicted Price Result", True):
             col1,col2 = st.columns([1,3])
-            pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD",min_value=datetime.today() -timedelta(days=7),max_value=datetime.today() )
+            pre_d = col1.date_input("Choose predicted date",format="YYYY-MM-DD",max_value=datetime.today() )
             patern = f'{pre_d.strftime("%Y%m%d")}-{st.session_state.code}'           
             document = fire.getDocumentData(patern)
          ########   
@@ -346,3 +372,9 @@ if __name__ == "__main__":
                 col2.code("Don't have predicted data !")
 
             
+
+
+
+
+
+    
