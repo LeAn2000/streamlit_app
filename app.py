@@ -45,10 +45,12 @@ def reset_index(df):
 
 
 def draw(dataset, ti):
-    plt.figure(figsize=(8, 2))
-    plt.title(f"{ti} Stock Closing Price Trending Prediction", fontsize=8)
-    plt.xlabel("Trading Date", fontsize=8)
-    plt.ylabel("Closing Price (VND)", fontsize=8)
+    plt.figure(figsize=(8, 3))
+    plt.title(f"{ti} Stock Closing Price Trending Prediction", fontsize=5, pad=20)
+    plt.xlabel("Trading Date", fontsize=5)
+    plt.ylabel("Closing Price (VND)", fontsize=5)
+    axis_y = dataset.close.to_list()
+    index = list(dataset.index)
     for i in range(len(dataset)):
         plt.plot(
             dataset.loc[i : i + 1, "time"],
@@ -56,8 +58,20 @@ def draw(dataset, ti):
             "bo-",
             color=("C1" if dataset.loc[i:i, "condition"][i] == 1 else "C0"),
         )
-
-    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.5)
+    
+    for x,y in zip(index, axis_y):
+        label = "{0:,.0f}".format(y)
+        plt.annotate(label,
+                     (x,y),
+                     textcoords="offset points",
+                     xytext=(0,10),
+                     fontsize=5,
+                     weight="bold",
+                     arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"),
+                     ha="center"
+                     )
+    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.1)
     red_patch = mpatches.Patch(color="C0", label="Actual Price")
     blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
     plt.legend(handles=[red_patch, blue_patch], fontsize=5)
@@ -225,7 +239,7 @@ if __name__ == "__main__":
         with st.expander("Prediction", True):
             radio_predict = st.radio(
                 "Choose Predict Next Day 👇",
-                ["1 Day", "2 Days", "3 Days", "4 Days", "5 Days", "6 Days", "7 Days"],
+                ["Next Day", "Next 2 Days", "Next 3 Days", "Next 4 Days", "Next 5 Days", "Next 6 Days", "Next 7 Days"],
                 horizontal=True,
             )
             col1, col2 = st.columns(2)
@@ -239,18 +253,20 @@ if __name__ == "__main__":
             # data_before["condition"].iloc[-1] = True
             data_before = data_before[["time", "close", "condition"]]
             data_before["time"] = data_before["time"].astype(str)
+
             step = {
-                "1 Day": 1,
-                "2 Days": 2,
-                "3 Days": 3,
-                "4 Days": 4,
-                "5 Days": 5,
-                "6 Days": 6,
-                "7 Days": 7,
+                "Next Day": 1,
+                "Next 2 Days": 2,
+                "Next 3 Days": 3,
+                "Next 4 Days": 4,
+                "Next 5 Days": 5,
+                "Next 6 Days": 6,
+                "Next 7 Days": 7,
             }
 
-
-            predict = data.Predict(step[radio_predict], st.session_state.code)
+            
+            days = [date_by_adding_business_days(lastdate, i).strftime("%Y-%m-%d") for i in range(1,step[radio_predict]+1)]
+            predict = data.Predict(step[radio_predict], st.session_state.code,days)
             meanPrice = predict["Predicted Price (VND)"].values[-1]
             reset_index(predict)
             for i in range(step[radio_predict]):
@@ -264,21 +280,21 @@ if __name__ == "__main__":
             )
             # predict['Predict with Indicator'] = predict['Predict with Indicator'].map("{0:,.2f}".format)
             data_before = data_before.reset_index(drop=True)
-            s1 = data_before_origin[["time", "close"]]
-            reset_index(s1)
-            newframe = pd.concat([s1, predict], axis=1).reset_index(drop=True)
-            reset_index(newframe)
-            newframe = newframe.rename(
-                columns={"time": "Trading Date", "close": "Actual Price (VND)"}
-            ).fillna("")
+            #s1 = data_before_origin[["time", "close"]]
+            # reset_index(s1)
+            # newframe = pd.concat([s1, predict], axis=1).reset_index(drop=True)
+            # reset_index(newframe)
+            # newframe = newframe.rename(
+            #     columns={"time": "Trading Date", "close": "Actual Price (VND)"}
+            # ).fillna("")
 
-            newframe.insert(loc=0, column="No.", value=newframe.index)
-            newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
-                "{0:,.0f}".format
-            )
+            predict.insert(loc=0, column="No.", value=predict.index)
+            # #newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
+            #     "{0:,.0f}".format)
+            
             with col1:
                 st.dataframe(
-                    newframe,
+                    predict,
                     use_container_width=True,
                     hide_index=True,
                 )
@@ -289,7 +305,7 @@ if __name__ == "__main__":
                     st.code(f"Trending prediction maybe Downtrend in the next {step[radio_predict]} day(s)" )
                 else:
                     st.code(f"Trending prediction maybe Uptrend in the next {step[radio_predict]} day(s)")
-           
+        
             st.pyplot(
                 draw(data_before, st.session_state.code), use_container_width=True
             )

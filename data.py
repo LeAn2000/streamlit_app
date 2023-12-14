@@ -102,8 +102,10 @@ class DataGenerate:
         return ((self.indicator + 1) * b) - (self.indicator * a)
 
     def PredictwithCT(self, a):
+
         a = np.array(a)
         a = a.reshape(1, -1)[0]
+        print(a)
         count = len(a)
         new_array = []
         new_array.append(a[0])
@@ -113,13 +115,14 @@ class DataGenerate:
                 new_array.append(d)
         return new_array
 
-    def Predict(self, day, code):
+    def Predict(self, day, code, days):
         scaler = MinMaxScaler(feature_range=(0, 1))
         self.InitModel(self.predictDate[day])
 
         input_data = self.get_before_data(code)
         inputs = input_data[["close", "volume"]].to_numpy()
-        inputs = inputs.reshape(-1, 2)
+        print(inputs[-1][0])
+        inputs = inputs.reshape(-1, 2) 
         inputs = scaler.fit_transform(inputs)
         #
         X_test = []
@@ -140,13 +143,8 @@ class DataGenerate:
         predict_to_draw = self.PredictwithCT(future_data_predicted)
 
         prices = []
-        days = []
         for i in range(0, day):
             prices.append(future_data_predicted[i][0])
-            if i == 0:
-                days.append("Next day")
-            else:
-                days.append(f"Next {i+1} days")
 
         # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
         df = pd.DataFrame(
