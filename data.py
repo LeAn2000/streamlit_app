@@ -4,7 +4,7 @@ import pandas as pd
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, date
-
+from firebase_admin import  storage
 
 class DataGenerate:
     def __init__(self):
@@ -19,6 +19,7 @@ class DataGenerate:
             "Bank": ["Ngân hàng"],
             "Construction and Real Estate": ["Xây dựng và Vật liệu", "Bất động sản"],
         }
+        self.bucketname = "streamlit-app-66a95.appspot.com"
         self.model = None
         self.predictDate = {
             1: "model_1.hdf5",
@@ -90,6 +91,8 @@ class DataGenerate:
             return pd.DataFrame()
 
     def InitModel(self, filepath):
+        blob = storage.bucket(self.bucketname).blob(filepath)
+        blob.download_to_filename(filepath)
         self.model = load_model(filepath)
 
     def get_before_data(self, code):

@@ -370,7 +370,7 @@ if __name__ == "__main__":
                 st.pyplot(drawCheckpoint(Ax,Ay,Px,Py,st.session_state.code), use_container_width=True)
             else:
                 col2.code("Don't have predicted data !")
-
+        
             
 
 
