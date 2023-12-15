@@ -153,8 +153,7 @@ def job():
         print(f"Your document name : {time}-{x}")
 
 
-# Schedule the job to run every 2 seconds
-schedule.every().day.at("16:42").do(job)
+schedule.every().day.at("16:00").do(job)
 
 while True:
     schedule.run_pending()
