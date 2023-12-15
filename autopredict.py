@@ -4,6 +4,18 @@ import pandas as pd
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, date
+import schedule
+import time
+
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+cred = credentials.Certificate("firebase_sdk.json")
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+s
 
 
 class ModelPredict:
@@ -82,14 +94,6 @@ class PredictStockPrice:
         return self.PredictwithCT(future_data_predicted)
 
 
-# import firebase_admin
-# from firebase_admin import credentials, firestore
-
-# cred = credentials.Certificate("firebase_sdk.json")
-# firebase_admin.initialize_app(cred)
-
-# db = firestore.client()
-
 # time = datetime.now().strftime("%Y%m%d")
 # idcode = "FPT"
 # code = PredictStockPrice(idcode)
@@ -106,3 +110,52 @@ class PredictStockPrice:
 #     print(f"Document data: {doc.to_dict()}")
 # else:
 #     print("No such document!")
+
+
+def job():
+    print("Running auto")
+    time = datetime.now().strftime("%Y%m%d")
+    idcode = [
+        "ACB",
+        "CEO",
+        "CTG",
+        "DIG",
+        "FPT",
+        "FRT",
+        "HAH",
+        "HBC",
+        "HPG",
+        "HSG",
+        "HVN",
+        "LDG",
+        "LPB",
+        "MWG",
+        "NKG",
+        "SKG",
+        "TLH",
+        "VCB",
+        "VGC",
+        "VJC",
+    ]  # replace your stock code
+    predict = db.collection("PredictStock")
+    for x in idcode:
+        code = PredictStockPrice(x)
+
+        predict.document(f"{time}-{x}").set(
+            dict(
+                {
+                    "data": [
+                        ModelPredict(i, code.Predict(i)).to_dict() for i in range(1, 8)
+                    ]
+                }
+            )
+        )
+        print(f"Your document name : {time}-{x}")
+
+
+# Schedule the job to run every 2 seconds
+schedule.every().day.at("16:42").do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
