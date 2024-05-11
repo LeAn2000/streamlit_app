@@ -9,7 +9,7 @@ from vnstock import *  # import all functions, including functions that provide 
 from vnstock.chart import *
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-
+import arima as ar
 
 def custommarkdown(field_name):
     return f'<p class="tablefield">{field_name}<p>'
@@ -44,9 +44,9 @@ def reset_index(df):
     df.index = np.arange(1, len(df) + 1)
 
 
-def draw(dataset, ti):
+def draw(dataset, ti, modelname):
     plt.figure(figsize=(8, 3))
-    plt.title(f"{ti} Stock Closing Price Trending Prediction", fontsize=5, pad=20)
+    plt.title(f"{ti} Stock Closing Price Trending Prediction ({modelname})", fontsize=5, pad=20)
     plt.xlabel("Trading Date", fontsize=5)
     plt.ylabel("Closing Price (VND)", fontsize=5)
     axis_y = dataset.close.to_list()
@@ -278,7 +278,7 @@ if __name__ == "__main__":
             # data_before["condition"].iloc[-1] = True
             data_before = data_before[["time", "close", "condition"]]
             data_before["time"] = data_before["time"].astype(str)
-
+   
             step = {
                 "Next Day": 1,
                 "Next 2 Days": 2,
@@ -289,7 +289,8 @@ if __name__ == "__main__":
                 "Next 7 Days": 7,
             }
 
-            
+          
+          
             days = [date_by_adding_business_days(lastdate, i).strftime("%Y-%m-%d") for i in range(1,step[radio_predict]+1)]
             predict = data.Predict(step[radio_predict], st.session_state.code,days)
             meanPrice = predict["Predicted Price (VND)"].values[-1]
@@ -303,6 +304,7 @@ if __name__ == "__main__":
             predict["Predicted Price (VND)"] = predict["Predicted Price (VND)"].map(
                 "{0:,.0f}".format
             )
+          
             # predict['Predict with Indicator'] = predict['Predict with Indicator'].map("{0:,.2f}".format)
             data_before = data_before.reset_index(drop=True)
             #s1 = data_before_origin[["time", "close"]]
@@ -312,15 +314,35 @@ if __name__ == "__main__":
             # newframe = newframe.rename(
             #     columns={"time": "Trading Date", "close": "Actual Price (VND)"}
             # ).fillna("")
-
+            predictarima = ar.PredictArima(step[radio_predict],st.session_state.code, days)
+            
+            before_arima = data_before_origin
+            before_arima.set_index("time")
+            before_arima["condition"] = False
+            # data_before["condition"].iloc[-1] = True
+            before_arima = before_arima[["time", "close", "condition"]]
+            before_arima["time"] = before_arima["time"].astype(str)
+            
+            for i in range(step[radio_predict]):
+                            before_arima.loc[len(before_arima.index)] = [
+                                predictarima["The Next Day"].values[i],
+                                predictarima["Predicted Price (VND)"].values[i],
+                                True,
+                            ]
+            before_arima = before_arima.reset_index(drop=True)
+            predictarima["Predicted Price (VND)"] = predictarima["Predicted Price (VND)"].map(
+                "{0:,.0f}".format
+            )
             predict.insert(loc=0, column="No.", value=predict.index)
             predict["No."] = predict["No."].astype(str)
             # #newframe["Actual Price (VND)"] = newframe["Actual Price (VND)"].map(
             #     "{0:,.0f}".format)
-            #####
+            ##### 
+            showoff = predict.merge(predictarima, how="inner",on="The Next Day")
+            showoff = showoff.rename(columns={"Predicted Price (VND)":"Predicted Price (LSTM)","Predicted Price (VND)_y":"Predicted Price (Arima)"})
             with col1:
                 st.dataframe(
-                    predict,
+                    showoff,
                     use_container_width=True,
                     hide_index=True,
                 )
@@ -333,7 +355,11 @@ if __name__ == "__main__":
                     st.code(f"Trending prediction maybe Uptrend in the next {step[radio_predict]} day(s)")
         
             st.pyplot(
-                draw(data_before, st.session_state.code), use_container_width=True
+                draw(data_before, st.session_state.code,"LSTM"), use_container_width=True
+            )
+            st.markdown("Predicted Price With Arima Model")
+            st.pyplot(
+                draw(before_arima, st.session_state.code,"Arima"), use_container_width=True
             )
         with st.expander("Check Predicted Price Result", True):
             col1,col2 = st.columns([1,3])
@@ -346,6 +372,7 @@ if __name__ == "__main__":
                 checkdate = [date_by_adding_business_days(pre_d, i) for i in range(1,dex+1)]
                 check_dataFrame = pd.DataFrame({"Real Date":checkdate})
                 realdata = data.getdateOverview(st.session_state.code, str(checkdate[0]), str(checkdate[-1]))
+                print(realdata)
                 Ax,Ay,Px,Py = [],[],[],[]
                 Px = [i.strftime("%Y-%m-%d") for i in checkdate]
                 if len(realdata) != 0:
