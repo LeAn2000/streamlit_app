@@ -44,7 +44,7 @@ def reset_index(df):
     df.index = np.arange(1, len(df) + 1)
 
 
-def draw(dataset, ti, modelname):
+def draw(dataset, ti, modelname, color):
     plt.figure(figsize=(8, 3))
     plt.title(f"{ti} Stock Closing Price Trending Prediction ({modelname})", fontsize=5, pad=20)
     plt.xlabel("Trading Date", fontsize=5)
@@ -56,7 +56,7 @@ def draw(dataset, ti, modelname):
             dataset.loc[i : i + 1, "time"],
             dataset.loc[i : i + 1, "close"],
             "bo-",
-            color=("C1" if dataset.loc[i:i, "condition"][i] == 1 else "C0"),
+            color=(color if dataset.loc[i:i, "condition"][i] == 1 else "C0"),
         )
     
     for x,y in zip(index, axis_y):
@@ -81,7 +81,86 @@ def draw(dataset, ti, modelname):
     plt.yticks(fontsize=5, weight="bold")
     return plt
 
-
+def drawx_y(dataset, ti):
+    plt.figure(figsize=(8, 3))
+    plt.title(f"{ti} Stock Closing Price Trending Prediction", fontsize=5, pad=20)
+    plt.xlabel("Trading Date", fontsize=5)
+    plt.ylabel("Closing Price (VND)", fontsize=5)
+    axis_x = dataset.close_x.to_list()
+    axis_y = dataset.close_y.to_list()
+    
+    index = list(dataset.index)
+    for i in range(len(dataset)):
+        plt.plot(
+            dataset.loc[i : i + 1, "time"],
+            dataset.loc[i : i + 1, "close_y"],
+            "bo-",
+            color=("C1" if dataset.loc[i:i, "condition_x"][i] == 1 else "C0"),
+        )
+        plt.plot(
+            dataset.loc[i : i + 1, "time"],
+            dataset.loc[i : i + 1, "close_x"],
+            "bo-",
+            color=("C3" if dataset.loc[i:i, "condition_y"][i] == 1 else "C0"),
+        )
+    
+    for x,y in zip(index, axis_x):
+        
+        label = "{0:,.0f}".format(y)
+        if x>6:
+            plt.annotate(label,
+                        (x,y),
+                        textcoords="offset points",
+                        xytext=(20,10),
+                        fontsize=5,
+                        weight="bold",
+                        arrowprops=dict(arrowstyle="->",
+                                connectionstyle="arc3,rad=0.95", color='C3'),
+                            
+                        ha="right",
+                        va="bottom",
+                        bbox=dict(boxstyle='round,pad=0.2', fc='red', alpha=0.3)
+                        )
+        else:
+             plt.annotate(label,
+                     (x,y),
+                     textcoords="offset points",
+                     xytext=(0,10),
+                     fontsize=5,
+                     weight="bold",
+                     arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"),
+                     ha="center"
+                     )
+        
+    for x,y in zip(index, axis_y):
+        if x > 6:
+            label = "{0:,.0f}".format(y)
+            plt.annotate(label,
+                        (x,y),
+                        textcoords="offset points",
+                        xytext=(5,20),
+                        fontsize=5,
+                        weight="bold",
+                        arrowprops=dict(arrowstyle="->",
+                                connectionstyle="arc3,rad=0.95",color='orange'),
+                        
+                        ha="center",
+                        va="bottom",
+                        bbox=dict(boxstyle='round,pad=0.2', fc='orange', alpha=0.3)
+                      
+                        )
+        
+    plt.grid(which="major", color="k", linestyle="-.", linewidth=0.1)
+    red_patch = mpatches.Patch(color="C0", label="Actual Price")
+    blue_patch = mpatches.Patch(color="C1", label="Predicted Price with LSTM Model")
+    x_patch = mpatches.Patch(color="C3", label="Predicted Price with ARIMA Model")
+    plt.legend(handles=[red_patch, blue_patch,x_patch], fontsize=5,loc="upper left")
+    current_values = plt.gca().get_yticks()
+    plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
+    plt.xticks(fontsize=4, weight="bold")
+    plt.yticks(fontsize=5, weight="bold")
+    return plt
 def drawCheckpoint(Ax, Ay, Px, Py,ti):
     plt.figure(figsize=(8, 3))
     plt.title(f"{ti} Stock Closing Price Trending Predicted", fontsize=5,pad=20)
@@ -293,6 +372,7 @@ if __name__ == "__main__":
           
             days = [date_by_adding_business_days(lastdate, i).strftime("%Y-%m-%d") for i in range(1,step[radio_predict]+1)]
             predict = data.Predict(step[radio_predict], st.session_state.code,days)
+            combine_lstm = predict
             meanPrice = predict["Predicted Price (VND)"].values[-1]
             reset_index(predict)
             for i in range(step[radio_predict]):
@@ -329,6 +409,9 @@ if __name__ == "__main__":
                                 predictarima["Predicted Price (VND)"].values[i],
                                 True,
                             ]
+            concatdata = before_arima.merge(data_before,how="inner",on="time")
+            
+            
             before_arima = before_arima.reset_index(drop=True)
             predictarima["Predicted Price (VND)"] = predictarima["Predicted Price (VND)"].map(
                 "{0:,.0f}".format
@@ -339,7 +422,7 @@ if __name__ == "__main__":
             #     "{0:,.0f}".format)
             ##### 
             showoff = predict.merge(predictarima, how="inner",on="The Next Day")
-            showoff = showoff.rename(columns={"Predicted Price (VND)":"Predicted Price (LSTM)","Predicted Price (VND)_y":"Predicted Price (Arima)"})
+            showoff = showoff.rename(columns={"Predicted Price (VND)_x":"Predicted Price(VND)(LSTM)","Predicted Price (VND)_y":"Predicted Price(VND)(ARIMA)"})
             with col1:
                 st.dataframe(
                     showoff,
@@ -354,12 +437,17 @@ if __name__ == "__main__":
                 else:
                     st.code(f"Trending prediction maybe Uptrend in the next {step[radio_predict]} day(s)")
         
+            st.markdown("Predicted Price With LSTM Model")
             st.pyplot(
-                draw(data_before, st.session_state.code,"LSTM"), use_container_width=True
+                draw(data_before, st.session_state.code,"LSTM","C1"), use_container_width=True
             )
-            st.markdown("Predicted Price With Arima Model")
+            st.markdown("Predicted Price With ARIMA Model")
             st.pyplot(
-                draw(before_arima, st.session_state.code,"Arima"), use_container_width=True
+                draw(before_arima, st.session_state.code,"ARIMA", "C3"), use_container_width=True
+            )
+            st.markdown("Compare Predicted Price between LSTM and ARIMA Model")
+            st.pyplot(
+                drawx_y(concatdata, st.session_state.code), use_container_width=True
             )
         with st.expander("Check Predicted Price Result", True):
             col1,col2 = st.columns([1,3])
@@ -372,7 +460,6 @@ if __name__ == "__main__":
                 checkdate = [date_by_adding_business_days(pre_d, i) for i in range(1,dex+1)]
                 check_dataFrame = pd.DataFrame({"Real Date":checkdate})
                 realdata = data.getdateOverview(st.session_state.code, str(checkdate[0]), str(checkdate[-1]))
-                print(realdata)
                 Ax,Ay,Px,Py = [],[],[],[]
                 Px = [i.strftime("%Y-%m-%d") for i in checkdate]
                 if len(realdata) != 0:

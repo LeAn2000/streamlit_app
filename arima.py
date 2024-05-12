@@ -7,7 +7,20 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 
 from vnstock import *
+def CT(indicator, a, b):
+        return ((indicator + 1) * b) - (indicator * a)
 
+def PredictwithCT(indicator,a):
+    a = np.array(a)
+    a = a.reshape(1, -1)[0]
+    count = len(a)
+    new_array = []
+    new_array.append(a[0])
+    for i in range(count):
+        if i != count - 1:
+            d = CT(indicator,a[i], a[i + 1])
+            new_array.append(d)
+    return new_array
 
 def PredictArima(day,code, days):
     from_date  = '2013-01-01'
@@ -58,7 +71,8 @@ def PredictArima(day,code, days):
         day += 1
     
     df = pd.DataFrame(
-            {"The Next Day": days, "Predicted Price (VND)": data_draw}
+            {"The Next Day": days, "Predicted Price (VND)": PredictwithCT(1,data_draw)}
+            #{"The Next Day": days, "Predicted Price (VND)": data_draw}
         )
     return df
 

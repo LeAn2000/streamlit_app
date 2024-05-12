@@ -145,9 +145,9 @@ class DataGenerate:
 
         predict_to_draw = self.PredictwithCT(future_data_predicted)
 
-        prices = []
-        for i in range(0, day):
-            prices.append(future_data_predicted[i][0])
+        # prices = []
+        # for i in range(0, day):
+        #     prices.append(future_data_predicted[i][0])
 
         # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
         df = pd.DataFrame(
