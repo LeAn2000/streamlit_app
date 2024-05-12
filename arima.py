@@ -71,7 +71,7 @@ def PredictArima(day,code, days):
         day += 1
     
     df = pd.DataFrame(
-            {"The Next Day": days, "Predicted Price (VND)": PredictwithCT(10,data_draw)}
+            {"The Next Day": days, "Predicted Price (VND)": PredictwithCT(3,data_draw)}
             #{"The Next Day": days, "Predicted Price (VND)": data_draw}
         )
     return df
