@@ -73,7 +73,7 @@ def draw(dataset, ti, modelname, color):
                      )
     plt.grid(which="major", color="k", linestyle="-.", linewidth=0.1)
     red_patch = mpatches.Patch(color="C0", label="Actual Price")
-    blue_patch = mpatches.Patch(color="C1", label="Predicted Price")
+    blue_patch = mpatches.Patch(color=color, label="Predicted Price")
     plt.legend(handles=[red_patch, blue_patch], fontsize=5,loc="upper left")
     current_values = plt.gca().get_yticks()
     plt.gca().set_yticklabels(["{:,.0f}".format(x) for x in current_values])
