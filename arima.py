@@ -52,7 +52,7 @@ def PredictArima(day,code, days):
     differenced_volume = difference(X[:, 1], days_in_year)
 
     # Fit model for close price
-    model_close = ARIMA(differenced_close, order=(1, 1, 1), exog=differenced_volume)
+    model_close = ARIMA(differenced_close, order=(3, 1, 3), exog=differenced_volume)
     model_fit_close = model_close.fit()
 
     # Forecast close price for 7 days ahead
