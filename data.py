@@ -151,6 +151,6 @@ class DataGenerate:
 
         # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
         df = pd.DataFrame(
-            {"The Next Day": days, "Predicted Price (VND)": predict_to_draw}
+            {"The Next Day": days, "Predicted Price (VND)": future_data_predicted}
         )
         return df
