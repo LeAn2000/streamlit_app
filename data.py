@@ -144,14 +144,14 @@ class DataGenerate:
             future_data_predicted.append(new_predicted_stock_price[:, 0])
 
 
-        predict_to_draw = self.PredictwithCT(future_data_predicted)
+        predict_to_draw = self.PredictwithCT(self.PredictwithCT(future_data_predicted))
        
-        prices = []
-        for i in range(0, day):
-            prices.append(future_data_predicted[i][0])
+        # prices = []
+        # for i in range(0, day):
+        #     prices.append(future_data_predicted[i][0])
 
         # df =  pd.DataFrame({"The next day":days, "Predict Price": prices, "Predict with Indicator": predict_to_draw})
         df = pd.DataFrame(
-            {"The Next Day": days, "Predicted Price (VND)": prices}
+            {"The Next Day": days, "Predicted Price (VND)": predict_to_draw}
         )
         return df
