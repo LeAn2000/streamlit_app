@@ -30,7 +30,7 @@ class DataGenerate:
             6: "model_6.hdf5",
             7: "model_7.hdf5",
         }
-        self.indicator = 10
+        self.indicator = 100
 
     def getStockCode(self):
         return np.sort(self.data["ticker"].values)
@@ -146,7 +146,7 @@ class DataGenerate:
             future_data_predicted.append(new_predicted_stock_price[:, 0])
 
 
-        predict_to_draw = self.PredictwithCT(self.PredictwithCT(future_data_predicted))
+        predict_to_draw = self.PredictwithCT(future_data_predicted)
        
         # prices = []
         # for i in range(0, day):
