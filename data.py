@@ -108,14 +108,16 @@ class DataGenerate:
 
         a = np.array(a)
         a = a.reshape(1, -1)[0]
-        print(a)
         count = len(a)
         new_array = []
         new_array.append(a[0])
-        for i in range(count):
-            if i != count - 1:
+        for i in range(count-1):
+            if i != count - 2:
                 d = self.CT(a[i], a[i + 1])
                 new_array.append(d)
+        if count > 1:
+            new_array.append(a[-1])
+        
         return new_array
 
     def Predict(self, day, code, days):
